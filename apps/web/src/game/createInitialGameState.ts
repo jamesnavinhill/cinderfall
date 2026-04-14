@@ -1,5 +1,6 @@
 import type { BoardDefinition } from '@/board/boardTypes';
 import type { GameState, MatchConfig, PlayerState } from '@/game/gameTypes';
+import { DEFAULT_NAVIGATION_MOVE_BUDGET } from '@/game/movementRules';
 
 const PLAYER_LOADOUTS: readonly Pick<PlayerState, 'name' | 'colorHex'>[] = [
   { name: 'Asha', colorHex: '#ff8f3f' },
@@ -26,8 +27,10 @@ export function createInitialGameState(
     boardId: board.id,
     activePlayerIndex: 0,
     turnNumber: 1,
+    navigationMoveBudget: DEFAULT_NAVIGATION_MOVE_BUDGET,
     volcanoMeter: 2,
     volcanoThreshold: 6,
+    lastEvent: 'Graybox navigation sandbox ready.',
     players,
     heartstone: {
       holderPlayerId: null,

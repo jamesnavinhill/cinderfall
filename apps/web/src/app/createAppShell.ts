@@ -27,7 +27,7 @@ export function createAppShell(container: HTMLElement): AppShell {
   controlsPanel.className = 'ui-panel ui-controls-panel';
   controlsPanel.innerHTML = `
     <p class="ui-kicker">Camera</p>
-    <p class="ui-copy">Rotate: drag | Zoom: wheel | Pan: right drag | Reset: R</p>
+    <p class="ui-copy">Rotate: drag | Zoom: wheel | Pan: right drag | Move: click a glowing node | Reset: R</p>
   `;
 
   uiLayer.append(titlePanel, controlsPanel);

@@ -4,6 +4,31 @@ Date: 2026-04-14
 
 Status: Active roadmap for preproduction and first implementation
 
+## Progress Snapshot
+
+Completed on 2026-04-14:
+
+- Phase 0: Preproduction Lock
+- Phase 1: Project Bootstrap
+- Phase 2: Board Graph and Navigation
+
+Current focus:
+
+- Phase 3: Card Turn System
+
+Implemented so far:
+
+- Vite + TypeScript + three.js app foundation
+- modular app, render, board, game, debug, input, and UI layers
+- full camera movement with reset support
+- `F1` debug visibility toggle
+- graybox `Mount Cinder` scene and authored board graph
+- clickable node picking
+- legal route preview
+- deterministic navigation move resolution
+- occupancy rule with shared dock/start behavior
+- danger-space volcano meter gain on move end
+
 ## Planning Defaults
 
 This roadmap assumes the following project direction is now active:
@@ -205,6 +230,8 @@ Since gameplay feel comes first but assets matter later, the code should include
 
 ### Phase 0: Preproduction Lock
 
+Status: Complete
+
 Goal:
 
 Lock enough structure to build without thrashing.
@@ -225,6 +252,8 @@ Exit criteria:
 - we know how multiplayer and AI fit into the shape
 
 ### Phase 1: Project Bootstrap
+
+Status: Complete
 
 Goal:
 
@@ -250,6 +279,8 @@ Exit criteria:
 
 ### Phase 2: Board Graph and Navigation
 
+Status: Complete
+
 Goal:
 
 Make the island traversable as a real game space.
@@ -271,6 +302,8 @@ Exit criteria:
 - shortcuts and choke points are visible and testable
 
 ### Phase 3: Card Turn System
+
+Status: Next
 
 Goal:
 
@@ -523,11 +556,11 @@ Keep rendering adapters separate from board and rules logic.
 
 The next concrete documents or tasks should be:
 
-1. create the `apps/web` Vite + TypeScript + three.js foundation
-2. write an architecture report for module boundaries and state ownership
-3. define the core TypeScript contracts for board, state, and actions
-4. create the first graybox board graph for `Mount Cinder`
-5. implement the `F1` debug visibility service first, not later
+1. replace the temporary navigation sandbox move budget with card-driven movement
+2. define card data contracts and a starter deck/pool module
+3. implement hand draw, play, and discard flow
+4. connect movement resolution to played card values
+5. add turn event history in a form that can evolve into replay/state sync
 
 ## Bottom Line
 

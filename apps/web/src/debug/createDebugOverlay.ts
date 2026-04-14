@@ -10,6 +10,8 @@ export interface DebugSnapshot {
   turnNumber: number;
   volcanoMeter: string;
   objectiveState: string;
+  hoveredNodeLabel: string;
+  previewStepCount: number;
 }
 
 export interface DebugOverlay {
@@ -33,6 +35,8 @@ export function createDebugOverlay(host: HTMLElement, debugStore: DebugStore): D
     'Players',
     'Active Player',
     'Turn',
+    'Hovered Node',
+    'Preview Steps',
     'Volcano Meter',
     'Heartstone',
   ] as const;
@@ -65,6 +69,8 @@ export function createDebugOverlay(host: HTMLElement, debugStore: DebugStore): D
       rows.get('Players')!.textContent = `Players: ${snapshot.playerCount}`;
       rows.get('Active Player')!.textContent = `Active Player: ${snapshot.activePlayerName}`;
       rows.get('Turn')!.textContent = `Turn: ${snapshot.turnNumber}`;
+      rows.get('Hovered Node')!.textContent = `Hovered Node: ${snapshot.hoveredNodeLabel}`;
+      rows.get('Preview Steps')!.textContent = `Preview Steps: ${snapshot.previewStepCount}`;
       rows.get('Volcano Meter')!.textContent = `Volcano Meter: ${snapshot.volcanoMeter}`;
       rows.get('Heartstone')!.textContent = `Heartstone: ${snapshot.objectiveState}`;
     },

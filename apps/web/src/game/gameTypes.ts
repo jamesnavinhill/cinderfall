@@ -17,12 +17,19 @@ export interface HeartstoneState {
   nodeId: NodeId;
 }
 
+export interface PlayerAction {
+  type: 'navigation-move';
+  targetNodeId: NodeId;
+}
+
 export interface GameState {
   boardId: BoardDefinition['id'];
   activePlayerIndex: number;
   turnNumber: number;
+  navigationMoveBudget: number;
   volcanoMeter: number;
   volcanoThreshold: number;
+  lastEvent: string;
   players: readonly PlayerState[];
   heartstone: HeartstoneState;
 }

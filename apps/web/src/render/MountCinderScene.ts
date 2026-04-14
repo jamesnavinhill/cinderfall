@@ -1,6 +1,7 @@
 import {
   AmbientLight,
   BoxGeometry,
+  Camera,
   CatmullRomCurve3,
   CircleGeometry,
   Color,
@@ -17,15 +18,17 @@ import {
   MeshBasicMaterial,
   MeshStandardMaterial,
   Object3D,
+  Raycaster,
   Scene,
   SphereGeometry,
   TorusGeometry,
   TubeGeometry,
+  Vector2,
   Vector3,
   WireframeGeometry,
 } from 'three';
 
-import type { BoardGraph, BoardNodeDefinition } from '@/board/boardTypes';
+import type { BoardGraph, BoardNodeDefinition, NodeId } from '@/board/boardTypes';
 import type { DebugStore } from '@/debug/DebugStore';
 import type { GameState, PlayerState } from '@/game/gameTypes';
 
@@ -34,6 +37,19 @@ const playerTokenGeometry = new CylinderGeometry(0.55, 0.75, 2.4, 16);
 const playerTokenCapGeometry = new CylinderGeometry(0.4, 0.55, 0.45, 16);
 const heartstoneGeometry = new DodecahedronGeometry(0.65, 0);
 
+interface NodeMaterialPreset {
+  color: string;
+  emissive: string;
+  emissiveIntensity: number;
+}
+
+export interface NavigationPresentationState {
+  activeNodeId: NodeId;
+  hoveredNodeId: NodeId | null;
+  reachableNodeIds: readonly NodeId[];
+  previewPath: readonly NodeId[];
+}
+
 export class MountCinderScene {
   readonly scene: Scene;
 
@@ -41,16 +57,32 @@ export class MountCinderScene {
   private readonly tokenGroup = new Group();
   private readonly playerTokens = new Map<string, Group>();
   private readonly playerMaterials = new Map<string, MeshStandardMaterial>();
+  private readonly nodeMeshes = new Map<NodeId, Mesh>();
+  private readonly nodeMaterials = new Map<NodeId, MeshStandardMaterial>();
+  private readonly nodeMaterialPresets = new Map<NodeId, NodeMaterialPreset>();
+  private readonly connectorMaterials = new Map<string, MeshStandardMaterial>();
   private readonly heartstoneMesh: Mesh;
+  private readonly raycaster = new Raycaster();
+  private readonly pointer = new Vector2();
 
+  private boardState: GameState;
+  private navigationState: NavigationPresentationState;
   private elapsedSeconds = 0;
   private readonly unsubscribeDebug: () => void;
 
   constructor(
     private readonly boardGraph: BoardGraph,
-    private readonly boardState: GameState,
+    initialState: GameState,
     debugStore: DebugStore,
   ) {
+    this.boardState = initialState;
+    this.navigationState = {
+      activeNodeId: initialState.players[initialState.activePlayerIndex]?.nodeId ?? initialState.heartstone.nodeId,
+      hoveredNodeId: null,
+      reachableNodeIds: [],
+      previewPath: [],
+    };
+
     this.scene = new Scene();
     this.scene.background = new Color('#f1af69');
     this.scene.fog = new Fog('#f1af69', 32, 88);
@@ -77,6 +109,8 @@ export class MountCinderScene {
     this.unsubscribeDebug = debugStore.subscribe((state) => {
       this.debugGroup.visible = state.visible;
     });
+
+    this.applyNavigationState();
   }
 
   update(elapsedSeconds: number): void {
@@ -84,6 +118,28 @@ export class MountCinderScene {
     this.updatePlayerTokens();
     this.updateHeartstone();
     this.animateEnvironment();
+  }
+
+  setGameState(state: GameState): void {
+    this.boardState = state;
+  }
+
+  setNavigationState(state: NavigationPresentationState): void {
+    this.navigationState = state;
+    this.applyNavigationState();
+  }
+
+  pickNode(clientX: number, clientY: number, camera: Camera, domElement: HTMLElement): NodeId | null {
+    const rect = domElement.getBoundingClientRect();
+
+    this.pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.pointer, camera);
+    const intersections = this.raycaster.intersectObjects([...this.nodeMeshes.values()], false);
+    const firstHit = intersections[0];
+
+    return (firstHit?.object.userData.nodeId as NodeId | undefined) ?? null;
   }
 
   dispose(): void {
@@ -193,23 +249,31 @@ export class MountCinderScene {
       connector.castShadow = true;
       connector.receiveShadow = true;
       this.scene.add(connector);
+
+      if (connector instanceof Mesh && connector.material instanceof MeshStandardMaterial) {
+        this.connectorMaterials.set(buildEdgeKey(fromNode.id, toNode.id), connector.material);
+      }
     }
 
     for (const node of this.boardGraph.definition.nodes) {
-      const stone = new Mesh(
-        nodeStoneGeometry,
-        new MeshStandardMaterial({
-          color: getNodeColor(node),
-          roughness: 0.82,
-          metalness: 0.04,
-          emissive: node.tags.includes('objective') ? '#8f3b16' : '#000000',
-          emissiveIntensity: node.tags.includes('objective') ? 0.9 : 0,
-        }),
-      );
+      const preset = getNodeMaterialPreset(node);
+      const material = new MeshStandardMaterial({
+        color: preset.color,
+        roughness: 0.82,
+        metalness: 0.04,
+        emissive: preset.emissive,
+        emissiveIntensity: preset.emissiveIntensity,
+      });
 
+      const stone = new Mesh(nodeStoneGeometry, material);
       stone.position.set(node.position[0], node.position[1], node.position[2]);
       stone.castShadow = true;
       stone.receiveShadow = true;
+      stone.userData.nodeId = node.id;
+
+      this.nodeMeshes.set(node.id, stone);
+      this.nodeMaterials.set(node.id, material);
+      this.nodeMaterialPresets.set(node.id, preset);
       this.scene.add(stone);
     }
   }
@@ -368,6 +432,90 @@ export class MountCinderScene {
 
     lavaPool.material.emissiveIntensity = 1.05 + Math.sin(this.elapsedSeconds * 2.6) * 0.18;
   }
+
+  private applyNavigationState(): void {
+    for (const [nodeId, material] of this.nodeMaterials) {
+      const preset = this.nodeMaterialPresets.get(nodeId);
+      const mesh = this.nodeMeshes.get(nodeId);
+
+      if (!preset || !mesh) {
+        continue;
+      }
+
+      material.color.set(preset.color);
+      material.emissive.set(preset.emissive);
+      material.emissiveIntensity = preset.emissiveIntensity;
+      mesh.scale.setScalar(1);
+    }
+
+    for (const material of this.connectorMaterials.values()) {
+      material.color.set('#88715b');
+      material.emissive.set('#000000');
+      material.emissiveIntensity = 0;
+    }
+
+    const reachableIds = new Set(this.navigationState.reachableNodeIds);
+    const previewIds = new Set(this.navigationState.previewPath);
+
+    for (const nodeId of reachableIds) {
+      const material = this.nodeMaterials.get(nodeId);
+
+      if (!material) {
+        continue;
+      }
+
+      material.emissive.set('#4f7ca3');
+      material.emissiveIntensity = 0.62;
+    }
+
+    for (const nodeId of previewIds) {
+      const material = this.nodeMaterials.get(nodeId);
+      const mesh = this.nodeMeshes.get(nodeId);
+
+      if (!material || !mesh) {
+        continue;
+      }
+
+      material.emissive.set('#ffb14d');
+      material.emissiveIntensity = 1.3;
+      mesh.scale.setScalar(1.08);
+    }
+
+    const activeMaterial = this.nodeMaterials.get(this.navigationState.activeNodeId);
+    const activeMesh = this.nodeMeshes.get(this.navigationState.activeNodeId);
+
+    if (activeMaterial && activeMesh) {
+      activeMaterial.emissive.set('#ffe4af');
+      activeMaterial.emissiveIntensity = 0.95;
+      activeMesh.scale.setScalar(1.14);
+    }
+
+    if (this.navigationState.hoveredNodeId) {
+      const hoveredMaterial = this.nodeMaterials.get(this.navigationState.hoveredNodeId);
+      const hoveredMesh = this.nodeMeshes.get(this.navigationState.hoveredNodeId);
+
+      if (hoveredMaterial && hoveredMesh) {
+        const isReachable = reachableIds.has(this.navigationState.hoveredNodeId);
+        hoveredMaterial.emissive.set(isReachable ? '#fff5d6' : '#d35e3f');
+        hoveredMaterial.emissiveIntensity = isReachable ? 1.6 : 1.1;
+        hoveredMesh.scale.setScalar(isReachable ? 1.13 : 1.06);
+      }
+    }
+
+    for (let index = 0; index < this.navigationState.previewPath.length - 1; index += 1) {
+      const fromNodeId = this.navigationState.previewPath[index];
+      const toNodeId = this.navigationState.previewPath[index + 1];
+      const material = this.connectorMaterials.get(buildEdgeKey(fromNodeId, toNodeId));
+
+      if (!material) {
+        continue;
+      }
+
+      material.color.set('#e3ad62');
+      material.emissive.set('#9a6326');
+      material.emissiveIntensity = 0.55;
+    }
+  }
 }
 
 function createConnector(
@@ -387,28 +535,56 @@ function createConnector(
   return connector;
 }
 
-function getNodeColor(node: BoardNodeDefinition): string {
+function getNodeMaterialPreset(node: BoardNodeDefinition): NodeMaterialPreset {
   if (node.tags.includes('objective')) {
-    return '#c76f2e';
+    return {
+      color: '#c76f2e',
+      emissive: '#8f3b16',
+      emissiveIntensity: 0.9,
+    };
   }
 
   if (node.tags.includes('dock')) {
-    return '#567479';
+    return {
+      color: '#567479',
+      emissive: '#000000',
+      emissiveIntensity: 0,
+    };
   }
 
   if (node.tags.includes('danger')) {
-    return '#9e5b35';
+    return {
+      color: '#9e5b35',
+      emissive: '#2e1208',
+      emissiveIntensity: 0.15,
+    };
   }
 
   if (node.tags.includes('shortcut')) {
-    return '#7f6f5b';
+    return {
+      color: '#7f6f5b',
+      emissive: '#000000',
+      emissiveIntensity: 0,
+    };
   }
 
   if (node.tags.includes('summit')) {
-    return '#b48b62';
+    return {
+      color: '#b48b62',
+      emissive: '#000000',
+      emissiveIntensity: 0,
+    };
   }
 
-  return '#8f7a63';
+  return {
+    color: '#8f7a63',
+    emissive: '#000000',
+    emissiveIntensity: 0,
+  };
+}
+
+function buildEdgeKey(fromNodeId: NodeId, toNodeId: NodeId): string {
+  return [fromNodeId, toNodeId].sort().join(':');
 }
 
 function buildRingOffset(index: number, total: number): number {
