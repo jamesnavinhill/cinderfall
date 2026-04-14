@@ -103,6 +103,14 @@ select {
   width: min(24rem, calc(100vw - 2rem));
 }
 
+.ui-hand-panel {
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(58rem, calc(100vw - 2rem));
+  pointer-events: auto;
+}
+
 .ui-kicker {
   margin: 0 0 0.25rem;
   color: var(--panel-highlight);
@@ -152,6 +160,79 @@ select {
 
 .hud-row + .hud-row {
   margin-top: 0.26rem;
+}
+
+.hand-prompt {
+  margin: 0 0 0.8rem;
+  color: var(--panel-copy);
+  font-size: 0.9rem;
+}
+
+.hand-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.hand-card {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  border: 1px solid rgba(255, 224, 178, 0.16);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(86, 40, 19, 0.88), rgba(38, 19, 12, 0.92));
+  color: #fff2d8;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.hand-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 226, 162, 0.34);
+  box-shadow: 0 14px 24px rgba(12, 8, 6, 0.24);
+}
+
+.hand-card.is-selected {
+  border-color: rgba(255, 239, 192, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(255, 239, 192, 0.55),
+    0 14px 24px rgba(12, 8, 6, 0.28);
+  transform: translateY(-2px);
+}
+
+.hand-card-name,
+.hand-card-move,
+.hand-card-summary,
+.hand-card-text {
+  display: block;
+}
+
+.hand-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.hand-card-move {
+  color: #ffd68e;
+  font-size: 0.86rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hand-card-summary {
+  color: #fff0cb;
+  font-size: 0.84rem;
+}
+
+.hand-card-text {
+  color: rgba(250, 236, 214, 0.82);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .debug-overlay {
@@ -218,5 +299,25 @@ select {
 
   .ui-controls-panel {
     bottom: 0.75rem;
+  }
+
+  .ui-status-panel {
+    top: auto;
+    bottom: 14.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+  }
+
+  .ui-hand-panel {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    width: auto;
+    transform: none;
+  }
+
+  .hand-card-list {
+    grid-template-columns: 1fr;
   }
 }

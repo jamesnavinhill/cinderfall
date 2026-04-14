@@ -8,6 +8,7 @@ coverage/
 .vite/
 .turbo/
 
+
 # Environment files
 .env
 .env.*
@@ -33,3 +34,4 @@ Thumbs.db
 .cache/
 tmp/
 temp/
+output/

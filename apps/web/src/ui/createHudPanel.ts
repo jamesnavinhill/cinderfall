@@ -1,3 +1,5 @@
+import type { TurnPhase } from '@/game/gameTypes';
+
 export interface HudSnapshot {
   activePlayerName: string;
   activePlayerColorHex: string;
@@ -7,6 +9,10 @@ export interface HudSnapshot {
   reachableNodeCount: number;
   moveBudget: number;
   turnNumber: number;
+  turnPhase: TurnPhase;
+  selectedCardName: string;
+  handCount: number;
+  discardCount: number;
   volcanoMeter: string;
   lastEvent: string;
 }
@@ -27,7 +33,7 @@ export function createHudPanel(host: HTMLElement): HudPanelController {
   playerRow.className = 'hud-player-row';
 
   const rows = new Map<string, HTMLParagraphElement>();
-  const rowKeys = ['Position', 'Hover', 'Preview', 'Reachable', 'Move Budget', 'Volcano', 'Event'] as const;
+  const rowKeys = ['Phase', 'Card', 'Position', 'Hover', 'Preview', 'Reachable', 'Hand', 'Volcano', 'Event'] as const;
 
   for (const key of rowKeys) {
     const row = document.createElement('p');
@@ -47,13 +53,26 @@ export function createHudPanel(host: HTMLElement): HudPanelController {
         <span>${snapshot.activePlayerName} - Turn ${snapshot.turnNumber}</span>
       `;
 
+      rows.get('Phase')!.textContent = `Phase: ${toPhaseLabel(snapshot.turnPhase)}`;
+      rows.get('Card')!.textContent = `Card: ${snapshot.selectedCardName}`;
       rows.get('Position')!.textContent = `Position: ${snapshot.activeNodeLabel}`;
       rows.get('Hover')!.textContent = `Hover: ${snapshot.hoveredNodeLabel}`;
-      rows.get('Preview')!.textContent = `Preview: ${snapshot.previewStepCount} step${snapshot.previewStepCount === 1 ? '' : 's'}`;
+      rows.get('Preview')!.textContent = `Preview: ${snapshot.previewStepCount} step${snapshot.previewStepCount === 1 ? '' : 's'} at move ${snapshot.moveBudget}`;
       rows.get('Reachable')!.textContent = `Reachable: ${snapshot.reachableNodeCount} nodes`;
-      rows.get('Move Budget')!.textContent = `Move Budget: ${snapshot.moveBudget}`;
+      rows.get('Hand')!.textContent = `Hand: ${snapshot.handCount} in hand, ${snapshot.discardCount} discarded`;
       rows.get('Volcano')!.textContent = `Volcano: ${snapshot.volcanoMeter}`;
       rows.get('Event')!.textContent = `Event: ${snapshot.lastEvent}`;
     },
   };
+}
+
+function toPhaseLabel(phase: TurnPhase): string {
+  switch (phase) {
+    case 'select-card':
+      return 'Select Card';
+    case 'move':
+      return 'Move';
+    case 'discard':
+      return 'Discard';
+  }
 }

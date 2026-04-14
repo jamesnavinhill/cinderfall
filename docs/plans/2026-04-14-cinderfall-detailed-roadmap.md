@@ -11,10 +11,11 @@ Completed on 2026-04-14:
 - Phase 0: Preproduction Lock
 - Phase 1: Project Bootstrap
 - Phase 2: Board Graph and Navigation
+- Phase 3: Card Turn System
 
 Current focus:
 
-- Phase 3: Card Turn System
+- Phase 4: Volcano Meter and Ember Boulder Hazards
 
 Implemented so far:
 
@@ -28,6 +29,15 @@ Implemented so far:
 - deterministic navigation move resolution
 - occupancy rule with shared dock/start behavior
 - danger-space volcano meter gain on move end
+- per-player starter decks and hand size `3`
+- card selection, play, discard, and turn advancement flow
+- starter 12-card pool wired into the playable build
+- card-driven movement budget replacing the temporary sandbox budget
+- event log foundation for future replay and sync work
+- card effect framework with implemented support for meter gain, guard/duck states, shove, snatch hooks, and discard flow
+- browser verification hooks via `window.render_game_to_text`, `window.advanceTime`, and `window.__cinderfallTestApi__`
+- `F` fullscreen support with dev overlay hidden by default and still toggleable via `F1`
+- `Clamber` and `Shortcut` staged as future hooks pending route-restriction systems
 
 ## Planning Defaults
 
@@ -303,7 +313,7 @@ Exit criteria:
 
 ### Phase 3: Card Turn System
 
-Status: Next
+Status: Complete
 
 Goal:
 
@@ -326,6 +336,8 @@ Exit criteria:
 - every card resolves cleanly and predictably
 
 ### Phase 4: Volcano Meter and Ember Boulder Hazards
+
+Status: Next
 
 Goal:
 
@@ -450,12 +462,14 @@ Deliverables:
 - hazard VFX upgrade path
 - animation hook points
 - lighting style pass
+- documented local conversion/compression recipes for `Blender`, `gltf-transform`, `gltfpack`, and `toktx`
 
 Exit criteria:
 
 - graybox objects can be swapped cleanly
 - production assets do not require rules rewrites
 - readability survives visual complexity
+- offline prep steps for converting and optimizing sourced assets are documented and repeatable
 
 ### Phase 10: Online Multiplayer
 
@@ -557,10 +571,10 @@ Keep rendering adapters separate from board and rules logic.
 The next concrete documents or tasks should be:
 
 1. replace the temporary navigation sandbox move budget with card-driven movement
-2. define card data contracts and a starter deck/pool module
-3. implement hand draw, play, and discard flow
-4. connect movement resolution to played card values
-5. add turn event history in a form that can evolve into replay/state sync
+2. implement visible volcano trigger flow once the meter fills
+3. author the first playable ember-boulder lane resolution model
+4. connect guard/duck states to actual hazard outcomes
+5. add heartstone pickup, steal, and drop interactions when hazard hits exist
 
 ## Bottom Line
 

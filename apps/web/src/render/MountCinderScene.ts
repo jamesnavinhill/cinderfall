@@ -32,7 +32,10 @@ import type { BoardGraph, BoardNodeDefinition, NodeId } from '@/board/boardTypes
 import type { DebugStore } from '@/debug/DebugStore';
 import type { GameState, PlayerState } from '@/game/gameTypes';
 
-const nodeStoneGeometry = new CylinderGeometry(1.15, 1.4, 0.4, 12);
+const BOARD_SURFACE_LIFT = 0.8;
+const CONNECTOR_SURFACE_LIFT = 0.42;
+
+const nodeStoneGeometry = new CylinderGeometry(1.15, 1.4, 0.65, 12);
 const playerTokenGeometry = new CylinderGeometry(0.55, 0.75, 2.4, 16);
 const playerTokenCapGeometry = new CylinderGeometry(0.4, 0.55, 0.45, 16);
 const heartstoneGeometry = new DodecahedronGeometry(0.65, 0);
@@ -266,7 +269,8 @@ export class MountCinderScene {
       });
 
       const stone = new Mesh(nodeStoneGeometry, material);
-      stone.position.set(node.position[0], node.position[1], node.position[2]);
+      const [x, y, z] = getLiftedNodePosition(node);
+      stone.position.set(x, y, z);
       stone.castShadow = true;
       stone.receiveShadow = true;
       stone.userData.nodeId = node.id;
@@ -288,7 +292,8 @@ export class MountCinderScene {
 
     for (const node of this.boardGraph.definition.nodes) {
       const nodeMarker = new Mesh(new SphereGeometry(1.65, 10, 10), nodeWireMaterial);
-      nodeMarker.position.set(node.position[0], node.position[1] + 0.15, node.position[2]);
+      const [x, y, z] = getLiftedNodePosition(node, 0.15);
+      nodeMarker.position.set(x, y, z);
       this.debugGroup.add(nodeMarker);
     }
 
@@ -296,7 +301,11 @@ export class MountCinderScene {
       const lanePoints = lane.nodeIds
         .map((nodeId) => this.boardGraph.nodeById.get(nodeId))
         .filter((node): node is BoardNodeDefinition => Boolean(node))
-        .map((node) => new Vector3(node.position[0], node.position[1] + 0.7, node.position[2]));
+        .map((node) => {
+          const [x, y, z] = getLiftedNodePosition(node, 0.7);
+
+          return new Vector3(x, y, z);
+        });
 
       const curve = new CatmullRomCurve3(lanePoints);
       const tube = new Mesh(
@@ -378,10 +387,11 @@ export class MountCinderScene {
 
         const angle = buildRingOffset(index, occupants.length);
         const radius = occupants.length === 1 ? 0 : 1.35;
+        const [x, y, z] = getLiftedNodePosition(node, Math.sin(this.elapsedSeconds * 2.2 + index) * 0.08);
         token.position.set(
-          node.position[0] + Math.cos(angle) * radius,
-          node.position[1] + Math.sin(this.elapsedSeconds * 2.2 + index) * 0.08,
-          node.position[2] + Math.sin(angle) * radius,
+          x + Math.cos(angle) * radius,
+          y,
+          z + Math.sin(angle) * radius,
         );
 
         const isActive = this.boardState.players[this.boardState.activePlayerIndex]?.id === player.id;
@@ -413,10 +423,11 @@ export class MountCinderScene {
         return;
       }
 
+      const [x, y, z] = getLiftedNodePosition(node, 1.35 + Math.sin(this.elapsedSeconds * 2.4) * 0.18);
       this.heartstoneMesh.position.set(
-        node.position[0],
-        node.position[1] + 1.35 + Math.sin(this.elapsedSeconds * 2.4) * 0.18,
-        node.position[2],
+        x,
+        y,
+        z,
       );
     }
 
@@ -523,8 +534,10 @@ function createConnector(
   toNode: BoardNodeDefinition,
   material: MeshStandardMaterial,
 ): Object3D {
-  const from = new Vector3(fromNode.position[0], fromNode.position[1] - 0.15, fromNode.position[2]);
-  const to = new Vector3(toNode.position[0], toNode.position[1] - 0.15, toNode.position[2]);
+  const [fromX, fromY, fromZ] = getLiftedNodePosition(fromNode, CONNECTOR_SURFACE_LIFT - BOARD_SURFACE_LIFT);
+  const [toX, toY, toZ] = getLiftedNodePosition(toNode, CONNECTOR_SURFACE_LIFT - BOARD_SURFACE_LIFT);
+  const from = new Vector3(fromX, fromY, fromZ);
+  const to = new Vector3(toX, toY, toZ);
   const direction = new Vector3().subVectors(to, from);
   const length = direction.length();
 
@@ -593,4 +606,8 @@ function buildRingOffset(index: number, total: number): number {
   }
 
   return (index / total) * Math.PI * 2;
+}
+
+function getLiftedNodePosition(node: BoardNodeDefinition, yOffset = 0): [number, number, number] {
+  return [node.position[0], node.position[1] + BOARD_SURFACE_LIFT + yOffset, node.position[2]];
 }

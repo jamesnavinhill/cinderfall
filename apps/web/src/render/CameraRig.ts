@@ -5,8 +5,8 @@ export class CameraRig {
   readonly camera: PerspectiveCamera;
   readonly controls: OrbitControls;
 
-  private readonly defaultPosition = new Vector3(24, 24, 28);
-  private readonly defaultTarget = new Vector3(0, 8.5, 0);
+  private readonly defaultPosition = new Vector3(14, 34, 26);
+  private readonly defaultTarget = new Vector3(0, 10, 2);
 
   constructor(domElement: HTMLElement) {
     this.camera = new PerspectiveCamera(50, 1, 0.1, 200);
@@ -16,7 +16,7 @@ export class CameraRig {
     this.controls.dampingFactor = 0.08;
     this.controls.enablePan = true;
     this.controls.minDistance = 10;
-    this.controls.maxDistance = 58;
+    this.controls.maxDistance = 72;
     this.controls.maxPolarAngle = Math.PI / 2.05;
     this.controls.target.copy(this.defaultTarget);
 

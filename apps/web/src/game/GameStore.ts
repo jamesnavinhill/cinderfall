@@ -1,4 +1,5 @@
 import type { BoardGraph, NodeId } from '@/board/boardTypes';
+import { discardCardToContinueTurn, toggleSelectedCard } from '@/game/cardRules';
 import { resolvePlayerAction } from '@/game/movementRules';
 import type { GameState } from '@/game/gameTypes';
 
@@ -28,6 +29,22 @@ export class GameStore {
     };
   }
 
+  handleHandCardClick(cardInstanceId: string): boolean {
+    const nextState =
+      this.state.turnPhase === 'discard'
+        ? discardCardToContinueTurn(this.state, cardInstanceId)
+        : toggleSelectedCard(this.state, cardInstanceId);
+
+    if (!nextState) {
+      return false;
+    }
+
+    this.state = nextState;
+    this.emit();
+
+    return true;
+  }
+
   commitNavigationMove(targetNodeId: NodeId): boolean {
     const result = resolvePlayerAction(this.boardGraph, this.state, {
       type: 'navigation-move',
@@ -39,11 +56,14 @@ export class GameStore {
     }
 
     this.state = result.nextState;
+    this.emit();
 
+    return true;
+  }
+
+  private emit(): void {
     for (const listener of this.listeners) {
       listener(this.state);
     }
-
-    return true;
   }
 }
