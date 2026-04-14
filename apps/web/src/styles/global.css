@@ -1,0 +1,187 @@
+:root {
+  color-scheme: dark;
+  font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  line-height: 1.5;
+  font-weight: 400;
+  --sky-top: #f4c58c;
+  --sky-mid: #cc7146;
+  --sky-bottom: #2e2421;
+  --panel-bg: rgba(30, 19, 13, 0.7);
+  --panel-border: rgba(252, 201, 128, 0.25);
+  --panel-highlight: rgba(255, 236, 198, 0.84);
+  --panel-copy: rgba(250, 236, 214, 0.9);
+  --debug-bg: rgba(13, 13, 15, 0.76);
+  --debug-border: rgba(170, 226, 255, 0.28);
+  --debug-copy: rgba(223, 243, 255, 0.92);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(255, 207, 144, 0.2), transparent 32%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--sky-bottom) 100%);
+  color: var(--panel-copy);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.app-shell,
+.app-viewport,
+.ui-layer,
+.debug-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.app-shell {
+  overflow: hidden;
+}
+
+.app-viewport {
+  z-index: 0;
+}
+
+.render-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ui-layer,
+.debug-layer {
+  pointer-events: none;
+}
+
+.ui-panel,
+.debug-overlay {
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  box-shadow:
+    0 18px 40px rgba(12, 8, 6, 0.22),
+    inset 0 1px 0 rgba(255, 244, 214, 0.06);
+}
+
+.ui-panel {
+  position: absolute;
+  max-width: min(28rem, calc(100vw - 2rem));
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(54, 28, 16, 0.78), rgba(20, 14, 11, 0.72));
+  padding: 1rem 1.15rem;
+}
+
+.ui-title-panel {
+  top: 1rem;
+  left: 1rem;
+}
+
+.ui-controls-panel {
+  right: 1rem;
+  bottom: 1rem;
+  max-width: min(24rem, calc(100vw - 2rem));
+}
+
+.ui-kicker {
+  margin: 0 0 0.25rem;
+  color: var(--panel-highlight);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ui-title-panel h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+}
+
+.ui-copy {
+  margin: 0.35rem 0 0;
+  color: var(--panel-copy);
+  max-width: 26rem;
+  font-size: 0.95rem;
+}
+
+.debug-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: min(19rem, calc(100vw - 2rem));
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--debug-bg), rgba(13, 16, 18, 0.72));
+  border-color: var(--debug-border);
+  color: var(--debug-copy);
+  padding: 0.95rem 1rem;
+  font-family: "Consolas", "SFMono-Regular", "Liberation Mono", monospace;
+}
+
+.debug-title,
+.debug-row,
+.debug-controls {
+  margin: 0;
+}
+
+.debug-title {
+  margin-bottom: 0.6rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.debug-row {
+  font-size: 0.82rem;
+  opacity: 0.94;
+}
+
+.debug-row + .debug-row {
+  margin-top: 0.24rem;
+}
+
+.debug-controls {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(170, 226, 255, 0.2);
+  font-size: 0.78rem;
+  opacity: 0.86;
+}
+
+@media (max-width: 720px) {
+  .ui-title-panel,
+  .ui-controls-panel,
+  .debug-overlay {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-width: none;
+  }
+
+  .ui-title-panel {
+    top: 0.75rem;
+  }
+
+  .debug-overlay {
+    top: auto;
+    bottom: 7.5rem;
+  }
+
+  .ui-controls-panel {
+    bottom: 0.75rem;
+  }
+}
