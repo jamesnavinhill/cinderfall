@@ -44,7 +44,7 @@ export function createHudPanel(host: HTMLElement): HudPanelController {
     render(snapshot) {
       playerRow.innerHTML = `
         <span class="hud-player-sigil" style="background:${snapshot.activePlayerColorHex}"></span>
-        <span>${snapshot.activePlayerName} · Turn ${snapshot.turnNumber}</span>
+        <span>${snapshot.activePlayerName} - Turn ${snapshot.turnNumber}</span>
       `;
 
       rows.get('Position')!.textContent = `Position: ${snapshot.activeNodeLabel}`;
